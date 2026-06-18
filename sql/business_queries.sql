@@ -220,11 +220,25 @@ order by
 
 
 --14. Average Product Revenue
-select
-	avg(o.sales) as AVG_product_Rvenue
+with cte as 
+(select
+	p.product_name,
+	sum(o.sales) as Revenue
 from 
-	orders o;
-
+	products p 
+join 
+	orders o
+on 
+	p.product_id = o.product_id
+group by 
+	p.product_id,
+	p.product_name
+)
+select 
+	avg(Revenue) over( ROWS BETWEEN unbounded preceding AND unbounded following) as "average product revenue"
+from
+	cte
+limit 1;
 
 --15. Product Revenue Ranking
 with cte as
@@ -353,7 +367,8 @@ on
 	c.customer_id = o.customer_id
 group by 
 	c.customer_id,
-	c.customer_name
+	c.customer_name,
+	c.country
 )
 select 
 	*
@@ -407,16 +422,131 @@ group by
 )
 SELECT 	
 	*,
-	round((( Revenue - (LAG(Revenue) over(ORDER BY order_date)) ) / Revenue )*100,2) as " Daily Revenue Growth %"
+	round((( Revenue - (LAG(Revenue) over(ORDER BY order_date)) ) / (LAG(Revenue) over(ORDER BY order_date)) )*100,2) as " Daily Revenue Growth %"
 from
 	cte ;
 	
 
+--26. Top Customer Per City
+with cte as 
+(select 
+	c.customer_name,
+	sum(o.sales) as Revenue,
+	c.city,
+	dense_rank() over(partition by city order by sum(o.sales) DESC) as RankNo
+from
+	customers c
+join 
+	orders o
+on 
+	c.customer_id = o.customer_id
+group by 
+	c.customer_id,
+    c.customer_name,
+    c.country,
+    c.city
+)
+select 
+	*
+from	
+	cte
+where 
+	RankNo = 1;
 
 
+--27. Revenue Share By Category
+with cte as 
+(select 
+	p.category,
+	sum(o.sales) as Revenue
+from
+	products p
+join 
+	orders o
+on 
+	p.product_id = o.product_id 
+group by 
+	p.category
+)
+select 
+	*,
+	round((Revenue / sum(Revenue) over( ROWS BETWEEN unbounded preceding AND unbounded following)) * 100,2) as "Category contribution %"
+from	
+	cte;
 
 
-
+--28. Rolling 3-Day Revenue
+with cte as
+(select 
+	o.order_date,
+	sum(o.sales) as Revenue
+from
+	orders o
+group by 
+	order_date
+ORDER BY 
+	o.order_date
+)
+select 
+	order_date,
+	SUM(Revenue) OVER (ORDER BY order_date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS rolling_3_day_revenue
+from
+	cte;
 
 	
+--29. Customer Purchase Frequency
+SELECT 
+    c.customer_id,
+    c.customer_name,
+    COUNT(o.order_id) AS total_orders
+FROM 
+    customers c
+JOIN 
+    orders o 
+ON 
+	c.customer_id = o.customer_id
+GROUP BY 
+    c.customer_id,
+	c.customer_name
+ORDER BY 
+    total_orders DESC;   
+
+
+--30. Average Days Between Purchases
+WITH purchase_gaps AS
+(
+SELECT
+	c.customer_name,
+	o.order_date,
+	LAG(o.order_date) OVER(
+         				   PARTITION BY c.customer_id
+            			   ORDER BY o.order_date
+        					) AS previous_order_date
+FROM 
+	customers c
+JOIN 
+	orders o
+ON 
+	c.customer_id = o.customer_id
+)
+SELECT
+	customer_name,
+    AVG(
+        order_date - previous_order_date
+    ) AS avg_days_between_purchases
+FROM purchase_gaps
+
+WHERE previous_order_date IS NOT NULL
+
+GROUP BY customer_name
+
+ORDER BY avg_days_between_purchases;
+
+
+
+
+
+
+
+
 
