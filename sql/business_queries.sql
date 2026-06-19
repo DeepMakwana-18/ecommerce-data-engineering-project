@@ -476,22 +476,25 @@ from
 
 
 --28. Rolling 3-Day Revenue
-with cte as
-(select 
-	o.order_date,
-	sum(o.sales) as Revenue
-from
-	orders o
-group by 
-	order_date
-ORDER BY 
-	o.order_date
+WITH cte AS
+(
+    SELECT
+        order_date,
+        SUM(sales) AS revenue
+    FROM orders
+    GROUP BY order_date
 )
-select 
-	order_date,
-	SUM(Revenue) OVER (ORDER BY order_date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS rolling_3_day_revenue
-from
-	cte;
+
+SELECT
+    order_date,
+
+    SUM(revenue) OVER (
+        ORDER BY order_date
+        ROWS BETWEEN 2 PRECEDING
+        AND CURRENT ROW
+    ) AS rolling_3_day_revenue
+
+FROM cte;
 
 	
 --29. Customer Purchase Frequency

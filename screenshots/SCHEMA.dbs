@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="LogicalDesign" database="LogicalDesign" id="e0e1dfdd-8bbd-483a-8b66-b37b495dd835" >
+	<schema name="public" >
+		<table name="customers" spec="" >
+			<column name="customer_id" type="INT" mandatory="y" />
+			<column name="customer_name" type="VARCHAR" length="50" />
+			<column name="country" type="VARCHAR" length="50" />
+			<column name="city" type="VARCHAR" length="50" />
+			<index name="pk_customers" unique="PRIMARY_KEY" >
+				<column name="customer_id" />
+			</index>
+		</table>
+		<table name="orders" spec="" >
+			<column name="order_id" type="TEXT" mandatory="y" />
+			<column name="customer_id" type="INT" mandatory="y" />
+			<column name="product_id" type="INT" mandatory="y" />
+			<column name="order_date" type="DATE" mandatory="y" />
+			<column name="quantity" type="INT" mandatory="y" />
+			<column name="sales" type="NUMERIC" length="10" decimal="2" mandatory="y" />
+			<index name="pk_orders" unique="PRIMARY_KEY" >
+				<column name="order_id" />
+			</index>
+			<constraint name="Cns_orders_quantity" >
+				<string><![CDATA[quantity > 0]]></string>
+			</constraint>
+			<constraint name="Cns_orders_sales" >
+				<string><![CDATA[sales >= 0]]></string>
+			</constraint>
+			<fk name="fk_customer" to_schema="public" to_table="customers" type="Identifying" mandatory="y" cardinality="OneMore" range_from="0" range_to="0" options="" >
+				<fk_column name="customer_id" pk="customer_id" />
+			</fk>
+			<fk name="fk_product" to_schema="public" to_table="products" type="Identifying" mandatory="y" cardinality="OneMore" range_from="0" range_to="0" options="" >
+				<fk_column name="product_id" pk="product_id" />
+			</fk>
+		</table>
+		<table name="payments" spec="" >
+			<column name="payment_id" type="INT" mandatory="y" />
+			<column name="order_id" type="INT" mandatory="y" />
+			<column name="payment_method" type="VARCHAR" length="50" mandatory="y" />
+			<column name="payment_date" type="DATE" mandatory="y" />
+			<column name="amount" type="NUMERIC" length="10" decimal="2" mandatory="y" />
+			<index name="pk_payments" unique="PRIMARY_KEY" >
+				<column name="payment_id" />
+			</index>
+			<fk name="fk_order" to_schema="public" to_table="orders" type="Identifying" mandatory="y" cardinality="OneMore" range_from="0" range_to="0" options="" >
+				<fk_column name="order_id" pk="order_id" />
+			</fk>
+		</table>
+		<table name="products" spec="" >
+			<column name="product_id" type="INT" mandatory="y" />
+			<column name="product_name" type="VARCHAR" length="100" />
+			<column name="category" type="VARCHAR" length="50" />
+			<column name="price" type="NUMERIC" length="10" decimal="2" />
+			<index name="pk_products" unique="PRIMARY_KEY" >
+				<column name="product_id" />
+			</index>
+		</table>
+	</schema>
+	<diagram_group name="Default" id="c8092eda-e42b-4926-aac6-03d86158c213" >
+		<diagram name="Diagram" id="9091985e-ef03-4f2d-850f-d357c18d4566" show_relation="columns" >
+			<entity schema="public" name="customers" color="3986C1" x="304" y="76" />
+			<entity schema="public" name="orders" color="3986C1" x="57" y="323" />
+			<entity schema="public" name="payments" color="3986C1" x="741" y="57" />
+			<entity schema="public" name="products" color="3986C1" x="779" y="418" />
+		</diagram>
+	</diagram_group>
+</project>
